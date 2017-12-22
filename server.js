@@ -1,26 +1,24 @@
 var express = require("express");
 var path = require("path");
 var bodyParser = require("body-parser");
-var mongodb = require("mongodb");
+var mongoose = require("mongoose");
 var morgan = require("morgan");
-var config = require("./config");
+var dbconfig = require("./config/dbconfig");
 var routes = require("./routes/router");
 
 var app = express();
 app.use(bodyParser.json());
-app.use('/', routes);
+app.use('/api', routes);
 app.use(morgan("dev"));
 
-var db;
-
-mongodb.MongoClient.connect(config.mongodb_url, function(err, database) {
-    if (err) {
-        return console.log(err);
-    }
-
-    db = database;
-    console.log("DB Conn");
+mongoose.connect(dbconfig.mongodb_url, {
+    useMongoClient: true
 });
+
+mongoose.Promise = global.Promise;
+var db = mongoose.connection;
+
+db.on('error', console.error.bind(console, "MongoDB connection error"));
 
 app.listen(8080, function() {
     console.log("Listening on port 8080");
